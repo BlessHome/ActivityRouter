@@ -31,6 +31,7 @@ public class Router {
     private static String mScheme = "router";
     private static String mHttpHost = "";
     private static Filter mFilter;
+    private static OnRouterForwardListener mOnRouterForwardListener;
 
     private Router(Activity activity) {
         activity.getIntent().getExtras();
@@ -137,7 +138,13 @@ public class Router {
             if (!(context instanceof Activity)) {
                 intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
             }
-            context.startActivity(intent);
+
+            if (mOnRouterForwardListener != null) {
+                mOnRouterForwardListener.startActivity(context, intent);
+            } else {
+                context.startActivity(intent);
+            }
+
             return true;
         } else {
             new Throwable(url + "can not startActivity").printStackTrace();
@@ -179,7 +186,13 @@ public class Router {
         if (clazz != null) {
             Intent intent = new Intent(activity, clazz);
             intent.setData(uri);
-            activity.startActivityForResult(intent, requestCode);
+
+            if (mOnRouterForwardListener != null) {
+                mOnRouterForwardListener.startActivityForResult(activity, intent, requestCode);
+            } else {
+                activity.startActivityForResult(intent, requestCode);
+            }
+
             return true;
         } else {
             new Throwable(url + "can not startActivity").printStackTrace();
@@ -203,7 +216,11 @@ public class Router {
         if (clazz != null) {
             Intent intent = new Intent(fragment.getActivity(), clazz);
             intent.setData(uri);
-            fragment.startActivityForResult(intent, requestCode);
+            if (mOnRouterForwardListener != null) {
+                mOnRouterForwardListener.startActivityForResult(fragment, intent, requestCode);
+            } else {
+                fragment.startActivityForResult(intent, requestCode);
+            }
             return true;
         } else {
             new Throwable(url + "can not startActivity").printStackTrace();
@@ -226,7 +243,11 @@ public class Router {
         if (clazz != null) {
             Intent intent = new Intent(fragment.getActivity(), clazz);
             intent.setData(uri);
-            fragment.startActivityForResult(intent, requestCode);
+            if (mOnRouterForwardListener != null) {
+                mOnRouterForwardListener.startActivityForResult(fragment, intent, requestCode);
+            } else {
+                fragment.startActivityForResult(intent, requestCode);
+            }
             return true;
         } else {
             new Throwable(url + "can not startActivity").printStackTrace();
@@ -257,5 +278,9 @@ public class Router {
 
     public static void setFilter(Filter filter) {
         Router.mFilter = filter;
+    }
+
+    public static void setOnRouterForwardListener(OnRouterForwardListener onRouterForwardListener) {
+        Router.mOnRouterForwardListener = onRouterForwardListener;
     }
 }
