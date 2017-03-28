@@ -50,53 +50,10 @@ public class Router {
     }
 
     public static void inject(Activity activity) {
-        RouterBundle bundle = new RouterBundle(activity.getIntent().getExtras(), activity.getIntent().getData());
+
         Class clazz = activity.getClass();
-        List<Field> fields = getDeclaredFields(clazz);
-        System.out.println(fields.size());
-        for (Field field : fields) {
-            RouterParam annotation = field.getAnnotation(RouterParam.class);
-            if (annotation == null) {
-                continue;
-            }
-            String type = field.getGenericType().toString();
-            field.setAccessible(true);
-            String[] names = annotation.value();
-            try {
-                for (String name : names) {
-                    if (!bundle.containsKey(name)) {
-                        continue;
-                    }
-                    if (type.equals("double")) {
-                        field.set(activity, bundle.getDouble(name, field.getDouble(activity)));
-                        continue;
-                    } else if (type.equals("float")) {
-                        field.set(activity, bundle.getFloat(name, field.getFloat(activity)));
-                        continue;
-                    } else if (type.equals("int")) {
-                        field.set(activity, bundle.getInt(name, field.getInt(activity)));
-                        continue;
-                    } else if (type.equals("boolean")) {
-                        field.set(activity, bundle.getBoolean(name, field.getBoolean(activity)));
-                        continue;
-                    }
-                    Object defaultValue = field.get(activity);
-                    if (field.getGenericType() == String.class) {
-                        field.set(activity, bundle.getString(name, (String) defaultValue));
-                    } else if (field.getGenericType() == Double.class) {
-                        field.set(activity, bundle.getDouble(name, defaultValue != null ? (Double) defaultValue : 0));
-                    } else if (field.getGenericType() == Float.class) {
-                        field.set(activity, bundle.getFloat(name, defaultValue != null ? (Float) defaultValue : 0));
-                    } else if (field.getGenericType() == Integer.class) {
-                        field.set(activity, bundle.getInt(name, defaultValue != null ? (Integer) defaultValue : 0));
-                    } else if (field.getGenericType() == Boolean.class) {
-                        field.set(activity, bundle.getBoolean(name, defaultValue != null ? (Boolean) defaultValue : false));
-                    }
-                }
-            } catch (IllegalAccessException e) {
-                e.printStackTrace();
-            }
-        }
+
+        injectRouterParam(activity, activity);
 
         // 二级跳转
         if (activity.getIntent().getData() != null) {
@@ -114,6 +71,71 @@ public class Router {
         }
     }
 
+    public static void inject(Activity activity, Fragment fragment) {
+        injectRouterParam(activity, fragment);
+    }
+
+    public static void inject(Activity activity, android.support.v4.app.Fragment fragment) {
+        injectRouterParam(activity, fragment);
+    }
+
+    /**
+     * 注入路由参数
+     *
+     * @param activity
+     * @param injectClassObject
+     */
+    private static void injectRouterParam(Activity activity, Object injectClassObject) {
+
+        RouterBundle bundle = new RouterBundle(activity.getIntent().getExtras(), activity.getIntent().getData());
+        Class clazz = injectClassObject.getClass();
+        List<Field> fields = getDeclaredFields(clazz);
+        System.out.println(fields.size());
+        for (Field field : fields) {
+            RouterParam annotation = field.getAnnotation(RouterParam.class);
+            if (annotation == null) {
+                continue;
+            }
+            String type = field.getGenericType().toString();
+            field.setAccessible(true);
+            String[] names = annotation.value();
+            try {
+                for (String name : names) {
+                    if (!bundle.containsKey(name)) {
+                        continue;
+                    }
+                    if (type.equals("double")) {
+                        field.set(injectClassObject, bundle.getDouble(name, field.getDouble(injectClassObject)));
+                        continue;
+                    } else if (type.equals("float")) {
+                        field.set(injectClassObject, bundle.getFloat(name, field.getFloat(injectClassObject)));
+                        continue;
+                    } else if (type.equals("int")) {
+                        field.set(injectClassObject, bundle.getInt(name, field.getInt(injectClassObject)));
+                        continue;
+                    } else if (type.equals("boolean")) {
+                        field.set(injectClassObject, bundle.getBoolean(name, field.getBoolean(injectClassObject)));
+                        continue;
+                    }
+                    Object defaultValue = field.get(injectClassObject);
+                    if (field.getGenericType() == String.class) {
+                        field.set(injectClassObject, bundle.getString(name, (String) defaultValue));
+                    } else if (field.getGenericType() == Double.class) {
+                        field.set(injectClassObject, bundle.getDouble(name, defaultValue != null ? (Double) defaultValue : 0));
+                    } else if (field.getGenericType() == Float.class) {
+                        field.set(injectClassObject, bundle.getFloat(name, defaultValue != null ? (Float) defaultValue : 0));
+                    } else if (field.getGenericType() == Integer.class) {
+                        field.set(injectClassObject, bundle.getInt(name, defaultValue != null ? (Integer) defaultValue : 0));
+                    } else if (field.getGenericType() == Boolean.class) {
+                        field.set(injectClassObject, bundle.getBoolean(name, defaultValue != null ? (Boolean) defaultValue : false));
+                    }
+                }
+            } catch (IllegalAccessException e) {
+                e.printStackTrace();
+            }
+        }
+
+    }
 
     public static void register(RouterInitializer routerInitializer) {
         routerInitializer.init(mRouterMap);
