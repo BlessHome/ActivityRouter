@@ -49,7 +49,7 @@ public class RouterProcessor extends AbstractProcessor {
         }
 
         Set<? extends Element> elements = roundEnv.getElementsAnnotatedWith(RouterName.class);
-        ClassName activityRouteTableInitializer = ClassName.get(routerClassPackageName, "RouterInitializer");
+        ClassName activityRouteTableInitializer = ClassName.get(DEFAULT_PACKAGE_NAME, "RouterInitializer");
         TypeSpec.Builder typeSpec = TypeSpec.classBuilder(routerModuleName + "RouterInitializer")
                 .addSuperinterface(activityRouteTableInitializer)
                 .addModifiers(Modifier.PUBLIC)
