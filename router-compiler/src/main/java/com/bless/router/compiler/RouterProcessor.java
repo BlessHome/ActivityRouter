@@ -50,11 +50,13 @@ public class RouterProcessor extends AbstractProcessor {
 
         Set<? extends Element> elements = roundEnv.getElementsAnnotatedWith(RouterName.class);
         ClassName activityRouteTableInitializer = ClassName.get(DEFAULT_PACKAGE_NAME, "RouterInitializer");
-        ClassName routerClass = ClassName.get(DEFAULT_PACKAGE_NAME, "Router");
         TypeSpec.Builder typeSpec = TypeSpec.classBuilder(routerModuleName + "RouterInitializer")
                 .addSuperinterface(activityRouteTableInitializer)
                 .addModifiers(Modifier.PUBLIC)
-                .addStaticBlock(CodeBlock.of(String.format("Router.register(new %sRouterInitializer());", routerModuleName)));
+                .addStaticBlock(CodeBlock.of(
+                        String.format("com.bless.router.Router.register(new %sRouterInitializer());",
+                                routerModuleName)
+                ));
 
         TypeElement activityRouteTableInitializerTypeElement = elementUtils.getTypeElement(activityRouteTableInitializer.toString());
         List<? extends Element> members = elementUtils.getAllMembers(activityRouteTableInitializerTypeElement);
@@ -91,9 +93,7 @@ public class RouterProcessor extends AbstractProcessor {
                 .addModifiers(Modifier.PUBLIC)
                 .addMethods(methodSpecs)
                 .build();
-        JavaFile javaFileRouterHelper = JavaFile.builder(routerClassPackageName, typeSpecRouterHelper)
-                .addStaticImport(routerClass)
-                .build();
+        JavaFile javaFileRouterHelper = JavaFile.builder(routerClassPackageName, typeSpecRouterHelper).build();
 
 
         JavaFile javaFile = JavaFile.builder(routerClassPackageName, typeSpec.addMethod(bindViewMethodSpecBuilder.build()).build()).build();
