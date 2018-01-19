@@ -50,6 +50,7 @@ public class RouterProcessor extends AbstractProcessor {
 
         Set<? extends Element> elements = roundEnv.getElementsAnnotatedWith(RouterName.class);
         ClassName activityRouteTableInitializer = ClassName.get(DEFAULT_PACKAGE_NAME, "RouterInitializer");
+        ClassName routerClass = ClassName.get(DEFAULT_PACKAGE_NAME, "Router");
         TypeSpec.Builder typeSpec = TypeSpec.classBuilder(routerModuleName + "RouterInitializer")
                 .addSuperinterface(activityRouteTableInitializer)
                 .addModifiers(Modifier.PUBLIC)
@@ -68,7 +69,7 @@ public class RouterProcessor extends AbstractProcessor {
         if (bindViewMethodSpecBuilder == null) {
             return false;
         }
-        ClassName activityHelperClassName = ClassName.get(routerClassPackageName, "ActivityHelper");
+        ClassName activityHelperClassName = ClassName.get(DEFAULT_PACKAGE_NAME, "ActivityHelper");
 
         List<MethodSpec> methodSpecs = new ArrayList<>();
         for (Element element : elements) {
@@ -90,7 +91,9 @@ public class RouterProcessor extends AbstractProcessor {
                 .addModifiers(Modifier.PUBLIC)
                 .addMethods(methodSpecs)
                 .build();
-        JavaFile javaFileRouterHelper = JavaFile.builder(routerClassPackageName, typeSpecRouterHelper).build();
+        JavaFile javaFileRouterHelper = JavaFile.builder(routerClassPackageName, typeSpecRouterHelper)
+                .addStaticImport(routerClass)
+                .build();
 
 
         JavaFile javaFile = JavaFile.builder(routerClassPackageName, typeSpec.addMethod(bindViewMethodSpecBuilder.build()).build()).build();
