@@ -30,7 +30,10 @@ import javax.lang.model.util.Elements;
 
 @AutoService(Processor.class)
 public class RouterProcessor extends AbstractProcessor {
+
+    private static final String DEFAULT_PACKAGE_NAME = "com.bless.router";
     private Elements elementUtils;
+    private String routerClassPackageName = DEFAULT_PACKAGE_NAME;
     private String routerModuleName = "";
 
     @Override
@@ -46,14 +49,14 @@ public class RouterProcessor extends AbstractProcessor {
         }
 
         Set<? extends Element> elements = roundEnv.getElementsAnnotatedWith(RouterName.class);
-        ClassName activityRouteTableInitializer = ClassName.get("com.bless.router", "RouterInitializer");
-        TypeSpec.Builder typeSpec = TypeSpec.classBuilder((routerModuleName.length() == 0 ? "Apt" : routerModuleName) + "RouterInitializer")
+        ClassName activityRouteTableInitializer = ClassName.get(routerClassPackageName, "RouterInitializer");
+        TypeSpec.Builder typeSpec = TypeSpec.classBuilder(routerModuleName + "RouterInitializer")
                 .addSuperinterface(activityRouteTableInitializer)
                 .addModifiers(Modifier.PUBLIC)
-                .addStaticBlock(CodeBlock.of(String.format("Router.register(new %sRouterInitializer());", (routerModuleName.length() == 0 ? "Apt" : routerModuleName))));
+                .addStaticBlock(CodeBlock.of(String.format("Router.register(new %sRouterInitializer());", routerModuleName)));
 
-        TypeElement activityRouteTableInitializertypeElement = elementUtils.getTypeElement(activityRouteTableInitializer.toString());
-        List<? extends Element> members = elementUtils.getAllMembers(activityRouteTableInitializertypeElement);
+        TypeElement activityRouteTableInitializerTypeElement = elementUtils.getTypeElement(activityRouteTableInitializer.toString());
+        List<? extends Element> members = elementUtils.getAllMembers(activityRouteTableInitializerTypeElement);
         MethodSpec.Builder bindViewMethodSpecBuilder = null;
         for (Element element : members) {
 //            System.out.println(element.getSimpleName());
@@ -65,7 +68,7 @@ public class RouterProcessor extends AbstractProcessor {
         if (bindViewMethodSpecBuilder == null) {
             return false;
         }
-        ClassName activityHelperClassName = ClassName.get("com.bless.router", "ActivityHelper");
+        ClassName activityHelperClassName = ClassName.get(routerClassPackageName, "ActivityHelper");
 
         List<MethodSpec> methodSpecs = new ArrayList<>();
         for (Element element : elements) {
@@ -87,10 +90,10 @@ public class RouterProcessor extends AbstractProcessor {
                 .addModifiers(Modifier.PUBLIC)
                 .addMethods(methodSpecs)
                 .build();
-        JavaFile javaFileRouterHelper = JavaFile.builder("com.bless.router", typeSpecRouterHelper).build();
+        JavaFile javaFileRouterHelper = JavaFile.builder(routerClassPackageName, typeSpecRouterHelper).build();
 
 
-        JavaFile javaFile = JavaFile.builder("com.bless.router", typeSpec.addMethod(bindViewMethodSpecBuilder.build()).build()).build();
+        JavaFile javaFile = JavaFile.builder(routerClassPackageName, typeSpec.addMethod(bindViewMethodSpecBuilder.build()).build()).build();
         try {
             javaFile.writeTo(processingEnv.getFiler());
         } catch (IOException e) {
@@ -108,7 +111,7 @@ public class RouterProcessor extends AbstractProcessor {
     private ClassName buildActivityHelper(String routerActivityName, ClassName activityHelperClassName, TypeElement typeElement) {
         List<? extends Element> members = elementUtils.getAllMembers(typeElement);
         List<MethodSpec> methodSpecs = new ArrayList<>();
-        ClassName className = ClassName.get("com.bless.router", typeElement.getSimpleName() + "Helper");
+        ClassName className = ClassName.get(routerClassPackageName, typeElement.getSimpleName() + "Helper");
         for (Element element : members) {
             RouterParam routerParam = element.getAnnotation(RouterParam.class);
             if (routerParam == null) {
@@ -139,7 +142,7 @@ public class RouterProcessor extends AbstractProcessor {
                 .addMethods(methodSpecs)
                 .addMethod(methodSpec)
                 .build();
-        JavaFile javaFile = JavaFile.builder("com.bless.router", typeSpec).build();
+        JavaFile javaFile = JavaFile.builder(routerClassPackageName, typeSpec).build();
 
         try {
             javaFile.writeTo(processingEnv.getFiler());
@@ -160,6 +163,11 @@ public class RouterProcessor extends AbstractProcessor {
                 this.routerModuleName = map.get(key);
             }
             System.out.println(key + " = " + map.get(key));
+        }
+        if (routerModuleName.length() > 0) {
+            routerClassPackageName = DEFAULT_PACKAGE_NAME + "." + routerModuleName.toLowerCase();
+        } else {
+            routerModuleName = "Apt";
         }
     }
 
